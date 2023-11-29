@@ -1,5 +1,5 @@
 import streamlit as st
-import requests
+import requests 
 
 def call_api(message):
     url = "https://api.afforai.com/api/api_completion"
