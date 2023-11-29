@@ -1,34 +1,42 @@
 import requests
 import json
 import streamlit as st
+from streamlit.report_thread import get_report_ctx
 
-st.title("💬 Chatbot")
-if "messages" not in st.session_state:
-    st.session_state["messages"] = [{"role": "assistant", "content": "¿En qué puedo ayudarte?"}] 
+# Session State Initialization
+ctx = get_report_ctx()
+if not hasattr(ctx, "session_state"):
+    ctx.session_state = {"messages": [{"role": "assistant", "content": "¿En qué puedo ayudarte?"}]}
 
-for msg in st.session_state.messages:
+# Constants
+AFFORAI_API_URL = "https://api.afforai.com/api/api_completion"
+SESSION_ID = "65489d7c9ad727940f2ab26f"
+AFFORAI_API_KEY = "fcbfdfe8-e9ed-41f3-a7d8-b6587538e84e"
+
+# Chat Messages Display
+for msg in ctx.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
+# User Input and API Request
 if prompt := st.chat_input():
-    session_id = "65489d7c9ad727940f2ab26f"
     history = [{"role": "user", "content": prompt}]
     payload = {
-        "sessionID": session_id,
+        "sessionID": SESSION_ID,
         "history": history,
         "powerful": False,
         "google": True
     }
 
-    afforai_api_key = "fcbfdfe8-e9ed-41f3-a7d8-b6587538e84e"
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {afforai_api_key}"
+        "Authorization": f"Bearer {AFFORAI_API_KEY}"
     }
 
-    response = requests.post("https://api.afforai.com/api/api_completion", headers=headers, data=json.dumps(payload))
-    if response.status_code == 200:
+    try:
+        response = requests.post(AFFORAI_API_URL, headers=headers, data=json.dumps(payload))
+        response.raise_for_status()
         msg = response.json()
-        st.session_state.messages.append(msg)
+        ctx.session_state.messages.append(msg)
         st.chat_message("assistant").write(msg["content"])
-    else:
-        st.error("Error en la solicitud de la API de Afforai.")
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error en la solicitud de la API de Afforai: {e}")
