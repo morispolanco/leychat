@@ -1,40 +1,34 @@
-import streamlit as st
 import requests
+import json
+import streamlit as st
 
-def call_api(message):
-    url = "https://api.afforai.com/api/api_completion"
+st.title("💬 Chatbot")
+if "messages" not in st.session_state:
+    st.session_state["messages"] = [{"role": "assistant", "content": "¿En qué puedo ayudarte?"}]
+
+for msg in st.session_state.messages:
+    st.chat_message(msg["role"]).write(msg["content"])
+
+if prompt := st.chat_input():
+    session_id = "65489d7c9ad727940f2ab26f"
+    history = [{"role": "user", "content": prompt}]
     payload = {
-        "apiKey": "fcbfdfe8-e9ed-41f3-a7d8-b6587538e84e",
-        "sessionID": "65489d7c9ad727940f2ab26f",
-        "history": [
-            {"role": "user", "content": message} 
-        ],
+        "sessionID": session_id,
+        "history": history,
         "powerful": False,
         "google": True
     }
-    
-    response = requests.post(url, json=payload)
-    
+
+    afforai_api_key = "fcbfdfe8-e9ed-41f3-a7d8-b6587538e84e"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {afforai_api_key}"
+    }
+
+    response = requests.post("https://api.afforai.com/api/api_completion", headers=headers, data=json.dumps(payload))
     if response.status_code == 200:
-        return response.json()
+        msg = response.json()
+        st.session_state.messages.append(msg)
+        st.chat_message("assistant").write(msg["content"])
     else:
-        return None
-
-def main():
-    st.title("Chatbot con Streamlit")
-    
-    message = st.text_input("Ingresa tu mensaje")
-    
-    if st.button("Enviar"):
-        if message:
-            response = call_api(message)
-            
-            if response:
-                st.text(response)
-            else:
-                st.text("Error al llamar a la API")
-        else:
-            st.text("Por favor, ingresa un mensaje")
-
-if __name__ == "__main__":
-    main()
+        st.error("Error en la solicitud de la API de Afforai.")
