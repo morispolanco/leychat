@@ -7,7 +7,7 @@ def call_api(message):
         "apiKey": "fcbfdfe8-e9ed-41f3-a7d8-b6587538e84e",
         "sessionID": "65489d7c9ad727940f2ab26f",
         "history": [
-            {"role": "user", "content": message}
+            {"role": "user", "content": message} 
         ],
         "powerful": False,
         "google": True
